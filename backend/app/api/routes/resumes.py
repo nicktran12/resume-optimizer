@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.db.database import get_db
 from app.db.models import Resume, ResumeChunk
-from app.services import s3, pdf_parser, section_detector, chunker, embeddings
+from app.services import s3, pdf_parser, section_detector, chunker, embeddings, sanitizer
 
 router = APIRouter()
 settings = get_settings()
@@ -33,6 +33,15 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
 
     if not chunks:
         raise HTTPException(status_code=400, details="Could not extract any usable content from this resume.")
+
+    try:
+        for c in chunks:
+            c["content"] = sanitizer.sanitize_for_llm(c["content"], source=f"resume chunk {c["chunk_index"]}")
+            findings = sanitizer.scan_for_injection(c["content"])
+            if findings:
+                print(f"[SECURITY] Suspicious content in resume chunk {c["chunk_index"]}: {findings}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     try:
         vectors = embeddings.embed_batch([c["content"] for c in chunks])
