@@ -1,50 +1,70 @@
-import { useState, useEffect } from "react";
-import { api } from "./services/api";
+import { useState, useEffect, useRef } from "react";
+import UploadPanel from "./components/UploadPanel";
+import ResultsPanel from "./components/ResultsPanel";
+import { mockAnalysis } from "./services/mockData";
+import type { AnalysisResult } from "./types";
 
-type ConnectionState = "checking" | "connected" | "error";
+const STAGES = [
+  "Uploading resume...",
+  "Processing resume...",
+  "Reading job description...",
+  "Finding relevant experience...",
+  "Generating recommendations...",
+];
+const STAGE_DURATION_MS = 700;
 
 function App() {
-  const [status, setStatus] = useState<ConnectionState>("checking");
-  const [detail, setDetail] = useState<string>("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [stageIndex, setStageIndex] = useState(0);
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    api
-      .health()
-      .then((res) => {
-        setStatus("connected");
-        setDetail(res.environment);
-      })
-      .catch((err) => {
-        setStatus("error");
-        setDetail(err.message);
-      });
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+    };
   }, []);
 
+  function handleSubmit(data: { resumeFile: File; jobUrl?: string; jobDescription?: string }) {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = []
+
+    setIsAnalyzing(true);
+    setStageIndex(0);
+
+    STAGES.forEach((_, i) => {
+      const t = setTimeout(() => setStageIndex(i), i * STAGE_DURATION_MS);
+      timeoutsRef.current.push(t)
+    });
+
+    const finalTimeout = setTimeout(() => {
+      setAnalysis(mockAnalysis)
+      setIsAnalyzing(false);
+    }, STAGES.length * STAGE_DURATION_MS);
+    timeoutsRef.current.push(finalTimeout);
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="max-w-lg w-full bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-        <h1 className="text-2xl font-semibold text-slate-900">Resume Optimizer</h1>
-        <p className="mt-2 text-slate-500">
-          Milestone 1: basic React + FastAPI connectivity check.
-        </p>
-        <div className="mt-6">
-          {status === "checking" && (
-            <span className="text-slate-500">Checking backend...</span>
-          )}
-          {status === "connected" && (
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-sm font-medium">
-              Connected ({detail})
-            </span>
-          )}
-          {status === "error" && (
-            <span className="inline-flex items-center gap-2 rounded-full bg-red-50 text-red-700 px-3 py-1 text-sm font-medium">
-              Error {detail}
-            </span>
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-5xl mx-auto flex gap-6 items-start">
+        <div className="w-full max-w-sm shrink-0">
+          <UploadPanel disabled={isAnalyzing} onSubmit={handleSubmit} />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          {isAnalyzing ? (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col items-center justify-center text-center h-64">
+              <div className="h-8 w-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+              <p className="mt-4 text-slate-900 font-medium">{STAGES[stageIndex]}</p>
+            </div>
+          ) : (
+            <ResultsPanel analysis={analysis} />
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default App;
