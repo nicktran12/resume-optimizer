@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
+from app.api.routes import resumes
 
 settings = get_settings()
 
@@ -18,3 +19,5 @@ app.add_middleware(
 @app.get("/health")
 def health_check():
   return {"status": "ok", "environment": settings.ENVIRONMENT}
+
+app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
