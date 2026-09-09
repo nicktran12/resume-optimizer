@@ -42,10 +42,8 @@ function ResultsPanel({ analysis }: ResultsPanelProps) {
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-4">
         <h2 className="text-lg font-semibold text-slate-900 mb-2">Score Breakdown</h2>
-        <ScoreBar label="Required Skills" value={analysis.score_breakdown.required_skills} />
-        <ScoreBar label="Technical Experience" value={analysis.score_breakdown.technical_experience} />
-        <ScoreBar label="Responsibilities" value={analysis.score_breakdown.responsibilities} />
         <ScoreBar label="Education" value={analysis.score_breakdown.education} />
+        <ScoreBar label="Required Skills" value={analysis.score_breakdown.required_skills} />
         <ScoreBar label="Preferred Skills" value={analysis.score_breakdown.preferred_skills} />
       </div>
 

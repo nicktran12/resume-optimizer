@@ -23,10 +23,8 @@ export interface Recommendation {
 }
 
 export interface ScoreBreakdown {
-  required_skills: number;
-  technical_experience: number;
-  responsibilities: number;
   education: number;
+  required_skills: number;
   preferred_skills: number;
 }
 

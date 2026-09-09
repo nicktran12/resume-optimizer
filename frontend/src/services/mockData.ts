@@ -5,10 +5,8 @@ export const mockAnalysis: AnalysisResult = {
   status: "complete",
   overall_score: 87,
   score_breakdown: {
-    required_skills: 92,
-    technical_experience: 88,
-    responsibilities: 84,
     education: 100,
+    required_skills: 92,
     preferred_skills: 60,
   },
   matched_skills: ["Python", "FastAPI", "PostgreSQL", "React"],
