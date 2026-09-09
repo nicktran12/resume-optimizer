@@ -21,11 +21,11 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
 
-    # OpenAI
-    OPENAI_API_KEY: str = ""
-    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    # Gemini
+    GEMINI_API_KEY: str = ""
+    EMBEDDING_MODEL: str = "gemini-embedding-001"
     EMBEDDING_DIMENSIONS: int = 1536
-    LLM_MODEL: str = "gpt-4o-mini"
+    LLM_MODEL: str = "gemini-2.5-flash"
 
     # Uploads
     MAX_UPLOAD_MB: int = 10

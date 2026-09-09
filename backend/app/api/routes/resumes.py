@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.db.database import get_db
 from app.db.models import Resume, ResumeChunk
-from app.services import s3, pdf_parser, section_detector, chunker
+from app.services import s3, pdf_parser, section_detector, chunker, embeddings
 
 router = APIRouter()
 settings = get_settings()
@@ -29,10 +29,15 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
         sections = section_detector.detect_sections(pages)
         chunks = chunker.chunk_sections(sections)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail="str(e)")
+        raise HTTPException(status_code=400, detail=str(e))
 
     if not chunks:
         raise HTTPException(status_code=400, details="Could not extract any usable content from this resume.")
+
+    try:
+        vectors = embeddings.embed_batch([c["content"] for c in chunks])
+    except:
+        raise HTTPException(status_code=502, details="Failed to generate embeddings. Please try again.")
 
     resume_id = str(uuid.uuid4())
 
@@ -50,7 +55,7 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
     db.add(resume)
     db.flush()
 
-    for c in chunks:
+    for c, vector in zip(chunks, vectors):
         db.add(
             ResumeChunk(
                 resume_id=resume.id,
@@ -58,7 +63,7 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
                 section=c["section"],
                 page=c["page"],
                 content=c["content"],
-                embedding=None,
+                embedding=vector,
             )
         )
     db.commit()
