@@ -1,10 +1,12 @@
 import re
 from collections import Counter
 
-def normalize_text(pages: list[str]) -> str:
+def normalize_pages(pages: list[str]) -> str:
     pages = _strip_repeated_headers_footers(pages)
-    cleaned_pages = [_clean_page(p) for p in pages]
-    return "\n\n".join(cleaned_pages)
+    return [_clean_page(p) for p in pages]
+
+def normalize_text(pages: list[str]) -> str:
+    return "\n\n".join(normalize_pages(pages))
 
 def _clean_page(text: str) -> str:
     # Normalize Windows/Mac line endings to \n

@@ -1,6 +1,6 @@
 import pymupdf
 
-from app.services.normalizer import normalize_text
+from app.services.normalizer import normalize_pages
 
 class PageText:
     def __init__(self, page_number: int, text: str):
@@ -31,6 +31,11 @@ def extract_text_by_page(pdf_bytes: bytes) -> list[PageText]:
 
     return pages
 
-def extract_full_text(pdf_bytes: bytes) -> str:
+def extract_normalized_pages(pdf_bytes: bytes) -> list[tuple[int, str]]:
     pages = extract_text_by_page(pdf_bytes)
-    return normalize_text([p.text for p in pages])
+    normalized = normalize_pages([p.text for p in pages])
+    return [(p.page_number, text) for p, text in zip(pages, normalized)]
+    
+def extract_full_text(pdf_bytes: bytes) -> str:
+    normalized_pages = extract_normalized_pages(pdf_bytes)
+    return "\n\n".join(text for _, text in normalized_pages)

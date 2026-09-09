@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.database import get_db
-from app.db.models import Resume
-from app.services import s3
+from app.db.models import Resume, ResumeChunk
+from app.services import s3, pdf_parser, section_detector, chunker
 
 router = APIRouter()
 settings = get_settings()
@@ -24,6 +24,16 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
     if len(contents) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
+    try:
+        pages = pdf_parser.extract_normalized_pages(contents)
+        sections = section_detector.detect_sections(pages)
+        chunks = chunker.chunk_sections(sections)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="str(e)")
+
+    if not chunks:
+        raise HTTPException(status_code=400, details="Could not extract any usable content from this resume.")
+
     resume_id = str(uuid.uuid4())
 
     try:
@@ -35,12 +45,30 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
         id=resume_id,
         filename=file.filename or "resume.pdf",
         s3_key = s3_key,
-        status="uploaded",
+        status="ready",
     )
     db.add(resume)
+    db.flush()
+
+    for c in chunks:
+        db.add(
+            ResumeChunk(
+                resume_id=resume.id,
+                chunk_index=c["chunk_index"],
+                section=c["section"],
+                page=c["page"],
+                content=c["content"],
+                embedding=None,
+            )
+        )
     db.commit()
 
-    return {"resume_id": str(resume.id), "filename": resume.filename, "status": resume.status}
+    return {
+        "resume_id": str(resume.id), 
+        "filename": resume.filename, 
+        "status": resume.status,
+        "chunk_count": len(chunks),
+    }
 
 @router.delete("/{resume_id}")
 def delete_resume(resume_id: str, db: Session = Depends(get_db)):
