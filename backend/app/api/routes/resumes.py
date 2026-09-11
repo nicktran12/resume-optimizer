@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.db.database import get_db
 from app.db.models import Resume, ResumeChunk
-from app.services import s3, pdf_parser, section_detector, chunker, embeddings, sanitizer
+from app.services import s3, pdf_parser, resume_section_detector, chunker, embeddings, sanitizer
 
 router = APIRouter()
 settings = get_settings()
@@ -26,7 +26,7 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
 
     try:
         pages = pdf_parser.extract_normalized_pages(contents)
-        sections = section_detector.detect_sections(pages)
+        sections = resume_section_detector.detect_sections(pages)
         chunks = chunker.chunk_sections(sections)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -36,10 +36,10 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
 
     try:
         for c in chunks:
-            c["content"] = sanitizer.sanitize_for_llm(c["content"], source=f"resume chunk {c["chunk_index"]}")
+            c["content"] = sanitizer.sanitize_for_llm(c["content"], source=f"resume chunk {c['chunk_index']}")
             findings = sanitizer.scan_for_injection(c["content"])
             if findings:
-                print(f"[SECURITY] Suspicious content in resume chunk {c["chunk_index"]}: {findings}")
+                print(f"[SECURITY] Suspicious content in resume chunk {c['chunk_index']}: {findings}")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

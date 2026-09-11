@@ -29,8 +29,7 @@ def sanitize_for_llm(text: str, source: str = "content") -> str:
     if len(text) > MAX_REASONABLE_LENGTH:
         raise ValueError(f"{source} exceeds reasonable length ({len(text)} chars) and was rejected.")
 
-    # Strip null bytes and other control characters that have no legitimate
-    # place in resume/job text and can sometimes be used to confuse parsers.
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
+    text = re.sub(r"[\uE000-\uF8FF\U000F0000-\U000FFFFD\U00100000-\U0010FFFD]", "", text)
 
     return text.strip()

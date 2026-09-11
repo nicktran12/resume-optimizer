@@ -38,7 +38,7 @@ def chunk_sections(sections: list[dict]) -> list[dict]:
                     {
                         "content": content,
                         "section": sec["section"],
-                        "page": sec["page"],
+                        "page": sec.get("page"),
                         "chunk_index": chunk_index,
                     }
                 )
