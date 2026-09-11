@@ -5,8 +5,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.db.models import Job, JobChunk
-from app.services import job_scraper, job_section_detector, chunker, embeddings, sanitizer
+from app.db.models import Job
+from app.services import job_scraper, job_section_detector, sanitizer
 
 router = APIRouter()
 
@@ -37,16 +37,11 @@ def submit_job(payload: JobSubmission, db: Session = Depends(get_db)):
         print(f"[SECURITY] Suspicious content in job submission: {findings}")
 
     sections = job_section_detector.detect_sections(raw_text)
-    chunks = chunker.chunk_sections(sections)
+    cleaned_text = "\n\n".join(s["text"] for s in sections)
 
-    if not chunks:
+    if not cleaned_text.strip():
         raise HTTPException(status_code=400, detail="Could not extract any usable content from that job description.")
-
-    try:
-        vectors = embeddings.embed_batch([c["content"] for c in chunks])
-    except Exception:
-        raise HTTPException(status_code=502, detail="Failed to generate embeddings. Please try again.")
-
+    
     job_id = str(uuid.uuid4())
     job = Job(
         id=job_id,
@@ -55,18 +50,6 @@ def submit_job(payload: JobSubmission, db: Session = Depends(get_db)):
         status="ready",
     )
     db.add(job)
-    db.flush()
-
-    for c, vector in zip(chunks, vectors):
-        db.add(
-            JobChunk(
-                job_id=job_id,
-                chunk_index=c["chunk_index"],
-                section=c["section"],
-                content=c["content"],
-                embedding=vector,
-            )
-        )
     db.commit()
 
-    return {"job_id": str(job.id), "status": job.status, "chunk_count": len(chunks)}
+    return {"job_id": str(job.id), "status": job.status}

@@ -54,21 +54,6 @@ class Job(Base):
     status: Mapped[str] = mapped_column(String(32), default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    chunks: Mapped[list["JobChunk"]] = relationship(back_populates="job", cascade="all, delete-orphan")
-
-class JobChunk(Base):
-    __tablename__ = "job_chunks"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"))
-    chunk_index: Mapped[int] = mapped_column(Integer)
-    section: Mapped[str] = mapped_column(String(128))
-    content: Mapped[str] = mapped_column(Text)
-    embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
-
-    job: Mapped["Job"] = relationship(back_populates="chunks")
-
 class Analysis(Base):
     __tablename__ = "analyses"
 
