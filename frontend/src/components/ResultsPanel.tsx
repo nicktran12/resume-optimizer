@@ -27,7 +27,7 @@ function ResultsPanel({ analysis }: ResultsPanelProps) {
         </div>
         <p className="mt-4 text-slate-900 font-medium">No analysis yet</p>
         <p className="mt-1 text-sm text-slate-400">
-          Upload a resume and job posting on the left, then click "Analyze Resume" to see your match score here.
+          Upload a resume and job posting on the left to see your match score here.
         </p>
       </div>
     );
