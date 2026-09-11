@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import Job
-from app.services import job_scraper, job_section_detector, sanitizer
+from app.services import sanitizer
+from app.services.jobs import job_scraper, job_section_detector
 
 router = APIRouter()
 

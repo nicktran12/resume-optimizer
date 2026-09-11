@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.db.database import get_db
 from app.db.models import Resume, ResumeChunk
-from app.services import s3, pdf_parser, resume_section_detector, chunker, embeddings, sanitizer
+from app.services import s3, sanitizer
+from app.services.resumes import pdf_parser, resume_section_detector, chunker, embeddings
 
 router = APIRouter()
 settings = get_settings()
