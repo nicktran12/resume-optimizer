@@ -24,6 +24,7 @@ class Resume(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
     filename: Mapped[str] = mapped_column(String(512))
     s3_key: Mapped[str] = mapped_column(String(1024))
+    content_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     status: Mapped[str] = mapped_column(String(32), default="uploaded")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
@@ -51,6 +52,7 @@ class Job(Base):
     title: Mapped[str] = mapped_column(String(512), nullable=True)
     company: Mapped[str] = mapped_column(String(512), nullable=True)
     raw_description: Mapped[str] = mapped_column(Text, nullable=True)
+    content_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     status: Mapped[str] = mapped_column(String(32), default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 

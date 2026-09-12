@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
@@ -21,9 +22,21 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
     max_bytes = settings.MAX_UPLOAD_MB * 1024 * 1024
     if len(contents) > max_bytes:
         raise HTTPException(status_code=400, detail=f"File exceeds the {settings.MAX_UPLOAD_MB}MB limit.")
-
     if len(contents) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    content_hash = hashlib.sha256(contents).hexdigest()
+
+    existing = db.query(Resume).filter(Resume.content_hash == content_hash).first()
+    if existing:
+        chunk_count = db.query(ResumeChunk).filter(ResumeChunk.resume_id == existing.id).count()
+        return {
+            "resume_id": str(existing.id),
+            "filename": existing.filename,
+            "status": existing.status,
+            "chunk_count": chunk_count,
+            "deduplicated": True,
+        }
 
     try:
         pages = pdf_parser.extract_normalized_pages(contents)
@@ -60,6 +73,7 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
         id=resume_id,
         filename=file.filename or "resume.pdf",
         s3_key = s3_key,
+        content_hash = content_hash,
         status="ready",
     )
     db.add(resume)
@@ -83,6 +97,7 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
         "filename": resume.filename, 
         "status": resume.status,
         "chunk_count": len(chunks),
+        "deduplicated": False,
     }
 
 @router.delete("/{resume_id}")

@@ -35,7 +35,7 @@ function App() {
 
       setAnalysis(result)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setError("Analysis failed. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }

@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -42,15 +43,22 @@ def submit_job(payload: JobSubmission, db: Session = Depends(get_db)):
 
     if not cleaned_text.strip():
         raise HTTPException(status_code=400, detail="Could not extract any usable content from that job description.")
+
+    content_hash = hashlib.sha256(cleaned_text.encode("utf-8")).hexdigest()
+
+    existing = db.query(Job).filter(Job.content_hash == content_hash).first()
+    if existing:
+        return {"job_id": str(existing.id), "status": existing.status, "deduplicated": True}
     
     job_id = str(uuid.uuid4())
     job = Job(
         id=job_id,
         url=payload.url,
         raw_description=raw_text,
+        content_hash=content_hash,
         status="ready",
     )
     db.add(job)
     db.commit()
 
-    return {"job_id": str(job.id), "status": job.status}
+    return {"job_id": str(job.id), "status": job.status, "deduplicated": False}

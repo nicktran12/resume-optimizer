@@ -9,6 +9,8 @@ from app.db.database import get_db
 from app.db.models import Resume, Job, Analysis
 from app.services.analysis import analysis_pipeline
 
+from app.services import cache
+
 router = APIRouter()
 
 class AnalysisRequest(BaseModel):
@@ -24,6 +26,29 @@ def run_analysis(payload: AnalysisRequest, db: Session = Depends(get_db)):
     job = db.get(Job, payload.job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
+
+    cached_result = cache.get_cached_analysis(payload.resume_id, payload.job_id)
+    if cached_result:
+        existing_analysis = (
+            db.query(Analysis)
+            .filter(Analysis.resume_id == payload.resume_id, Analysis.job_id == payload.job_id)
+            .first()
+        )
+        if existing_analysis:
+            return {"analysis_id": str(existing_analysis.id), "status": "complete", "cached": True, **cached_result}
+        
+        analysis_id = str(uuid.uuid4())
+        analysis = Analysis(
+            id=analysis_id,
+            resume_id=resume.id,
+            job_id=job.id,
+            status="complete",
+            overall_score=cached_result["overall_score"],
+            result_json=json.dumps(cached_result),
+        )
+        db.add(analysis)
+        db.commit()
+        return {"analysis_id": str(analysis.id), "status": "complete", "cached": True, **cached_result}
 
     analysis_id = str(uuid.uuid4())
     analysis = Analysis(
@@ -47,13 +72,15 @@ def run_analysis(payload: AnalysisRequest, db: Session = Depends(get_db)):
     analysis.result_json = json.dumps(result)
     db.commit()
 
-    return {"analysis_id": str(analysis.id), "status": analysis.status, **result}
+    cache.set_cached_analysis(payload.resume_id, payload.job_id, result)
+
+    return {"analysis_id": str(analysis.id), "status": analysis.status, "cached": False, **result}
 
 @router.get("/{analysis_id}")
 def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
     analysis = db.get(Analysis, analysis_id)
     if not analysis:
-        raise HTTPException(return_code=404, detail="Analysis not found.")
+        raise HTTPException(status_code=404, detail="Analysis not found.")
 
     if analysis.status != "complete":
         return {"analysis_id": str(analysis.id), "status": analysis.status}
