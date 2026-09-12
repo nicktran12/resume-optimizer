@@ -8,7 +8,6 @@ EVIDENCE_SECTIONS = {"Experience", "Projects"}
 
 EVIDENCE_SECTION_BOOST = 0.85
 
-CANDIDATE_POOL_SIZE = 10
 TOP_K = 3
 
 def retrieve_evidence(db: Session, resume_id: str, requirement_text: str, category: str = "required_skill") -> list[dict]:
@@ -18,7 +17,6 @@ def retrieve_evidence(db: Session, resume_id: str, requirement_text: str, catego
         select(ResumeChunk)
         .where(ResumeChunk.resume_id == resume_id)
         .order_by(ResumeChunk.embedding.cosine_distance(query_vector))
-        .limit(CANDIDATE_POOL_SIZE)
     )
     candidates = db.execute(stmt).scalars().all()
 

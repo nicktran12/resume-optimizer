@@ -4,6 +4,10 @@ interface ResultsPanelProps {
   analysis: AnalysisResult | null;
 }
 
+function formatCategoryLabel(category: string): string {
+  return category.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+}
+
 function ScoreBar({ label, value }: { label: string; value: number }) {
   return (
     <div>
@@ -78,7 +82,7 @@ function ResultsPanel({ analysis }: ResultsPanelProps) {
         <div className="space-y-4">
           {analysis.recommendations.map((rec, i) => (
             <div key={i}>
-              <p className="text-sm font-medium text-slate-900">{rec.category}</p>
+              <p className="text-sm font-medium text-slate-900">{formatCategoryLabel(rec.category)}</p>
               <p className="text-sm text-slate-600 mt-1">{rec.recommendation}</p>
             </div>
           ))}
@@ -89,20 +93,22 @@ function ResultsPanel({ analysis }: ResultsPanelProps) {
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Evidence</h2>
         <div className="space-y-4">
           {analysis.evidence.map((ev, i) => (
-            <div key={i} className="border-l-2 border-slate-200 pl-4">
-              <p className="text-sm font-medium text-slate-900">{ev.requirement}</p>
+            <div key={i}>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-slate-900">{ev.requirement}</p>
+                <span
+                  className={`text-xs font-medium rounded-full px-2 py-0.5 shrink-0 ${
+                    ev.match === "strong"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : ev.match === "partial"
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-red-50 text-red-700"
+                  }`}
+                >
+                  {ev.match}
+                </span>
+              </div>
               <p className="text-sm text-slate-600 mt-1">{ev.resume_evidence}</p>
-              <span
-                className={`inline-block mt-2 text-xs font-medium rounded-full px-2 py-0.5 ${
-                  ev.match === "strong"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : ev.match === "partial"
-                    ? "bg-amber-50 text-amber-700"
-                    : "bg-red-50 text-red-700"
-                }`}
-              >
-                {ev.match}
-              </span>
             </div>
           ))}
         </div>
