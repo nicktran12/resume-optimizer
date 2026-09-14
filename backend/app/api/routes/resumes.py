@@ -1,10 +1,11 @@
 import hashlib
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.limiter import limiter
 from app.db.database import get_db
 from app.db.models import Resume, ResumeChunk
 from app.services import s3, sanitizer
@@ -14,7 +15,8 @@ router = APIRouter()
 settings = get_settings()
 
 @router.post("")
-async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
+@limiter.limit("10/hour")
+async def upload_resume(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
 

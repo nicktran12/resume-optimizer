@@ -1,10 +1,11 @@
 import hashlib
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.limiter import limiter
 from app.db.database import get_db
 from app.db.models import Job
 from app.services import sanitizer
@@ -17,7 +18,8 @@ class JobSubmission(BaseModel):
     description: str | None = None
 
 @router.post("")
-def submit_job(payload: JobSubmission, db: Session = Depends(get_db)):
+@limiter.limit("10/hour")
+def submit_job(request: Request, payload: JobSubmission, db: Session = Depends(get_db)):
     if not payload.url and not payload.description:
         raise HTTPException(status_code=400, detail="Provide either a job url or a pasted description.")
 

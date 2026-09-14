@@ -1,10 +1,11 @@
 import json
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.limiter import limiter
 from app.db.database import get_db
 from app.db.models import Resume, Job, Analysis
 from app.services.analysis import analysis_pipeline
@@ -18,7 +19,8 @@ class AnalysisRequest(BaseModel):
     job_id: str
 
 @router.post("")
-def run_analysis(payload: AnalysisRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/hour")
+def run_analysis(request: Request, payload: AnalysisRequest, db: Session = Depends(get_db)):
     resume = db.get(Resume, payload.resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found.")
