@@ -50,12 +50,12 @@ function App() {
 
         <div className="flex-1 min-w-0">
           {isAnalyzing ? (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col items-center justify-center text-center h-64">
+            <div className="w-full bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col items-center justify-center text-center h-64">
               <div className="h-8 w-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
               <p className="mt-4 text-slate-900 font-medium">{STAGES[stageIndex]}</p>
             </div>
           ) : error ? (
-            <div className="bg-white rounded-xl shadow-sm border border-red-200 p-8 flex flex-col items-center justify-center text-center h-64">
+            <div className="w-full bg-white rounded-xl shadow-sm border border-red-200 p-8 flex flex-col items-center justify-center text-center h-64">
               <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center text-2xl">⚠️</div>
               <p className="mt-4 text-slate-900 font-medium">Analysis failed</p>
               <p className="mt-1 text-sm text-slate-500">{error}</p>
