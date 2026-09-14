@@ -43,8 +43,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-5xl mx-auto flex gap-6 items-start">
-        <div className="w-full max-w-sm shrink-0">
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-6 items-start">
+        <div className="w-full md:max-w-sm md:shrink-0">
           <UploadPanel disabled={isAnalyzing} onSubmit={handleSubmit} />
         </div>
 
