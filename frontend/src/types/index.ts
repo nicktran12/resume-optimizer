@@ -11,12 +11,6 @@ export interface Job {
   status: "pending" | "processing" | "ready" | "failed";
 }
 
-export interface Evidence {
-  requirement: string;
-  resume_evidence: string;
-  match: "strong" | "partial" | "none";
-}
-
 export interface Recommendation {
   category: string;
   recommendation: string;
@@ -36,5 +30,4 @@ export interface AnalysisResult {
   matched_skills: string[];
   missing_skills: string[];
   recommendations: Recommendation[];
-  evidence: Evidence[];
 }

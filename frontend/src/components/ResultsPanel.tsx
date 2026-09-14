@@ -88,31 +88,6 @@ function ResultsPanel({ analysis }: ResultsPanelProps) {
           ))}
         </div>
       </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Evidence</h2>
-        <div className="space-y-4">
-          {analysis.evidence.map((ev, i) => (
-            <div key={i}>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-slate-900">{ev.requirement}</p>
-                <span
-                  className={`text-xs font-medium rounded-full px-2 py-0.5 shrink-0 ${
-                    ev.match === "strong"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : ev.match === "partial"
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-red-50 text-red-700"
-                  }`}
-                >
-                  {ev.match}
-                </span>
-              </div>
-              <p className="text-sm text-slate-600 mt-1">{ev.resume_evidence}</p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

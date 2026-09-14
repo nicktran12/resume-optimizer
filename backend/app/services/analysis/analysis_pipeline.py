@@ -34,20 +34,10 @@ def run_analysis(db: Session, resume_id: str, job_raw_description: str) -> dict:
 
     recommendations = recommendation_generator.generate_recommendations(evaluated_requirements)
 
-    evidence_output = [
-        {
-            "requirement": r["text"],
-            "resume_evidence": r["evidence"][0]["content"] if r["evidence"] else "No relevant evidence found.",
-            "match": r["match_strength"],
-        }
-        for r in evaluated_requirements
-    ]
-
     return {
         "overall_score": overall_score,
         "score_breakdown": score_breakdown,
         "matched_skills": matched_skills,
         "missing_skills": missing_skills,
         "recommendations": [{"category": r.category, "recommendation": r.recommendation} for r in recommendations],
-        "evidence": evidence_output,
     }
