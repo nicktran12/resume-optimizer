@@ -11,7 +11,7 @@ settings = get_settings()
 
 app = FastAPI(title=settings.APP_NAME)
 app.state.limiter = limiter
-app.add_exception_handlder(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
   CORSMiddleware,
