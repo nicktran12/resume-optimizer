@@ -46,6 +46,9 @@ Never claim the candidate has a skill or qualification that isn't actually
 supported by the evidence provided. If evidence is weak or absent for an
 item, say so honestly rather than being generous.
 
+If a requirement includes data structures and algorithms, check to see if
+a course is listed under education.
+
 Return one result per item, using its index number, with brief reasoning
 (1-2 sentences) for each.
 """

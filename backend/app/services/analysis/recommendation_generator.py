@@ -46,7 +46,8 @@ must:
   there's a genuine gap, not a rewording trick
 
 Assign each recommendation a short category label (e.g. "Skills",
-"Experience", "Education").
+"Experience", "Education"). For each recommendation, provide a bullet point
+example for the user to add to their resume.
 """
 
 def generate_recommendations(evaluated_requirements: list[dict]) -> list[Recommendation]:

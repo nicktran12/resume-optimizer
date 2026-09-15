@@ -44,7 +44,7 @@ def run_analysis(db: Session, resume_id: str, job_raw_description: str) -> dict:
 
     missing_skills = [
         r["text"] for r in evaluated_requirements
-        if r["category"] in ("required_skill", "preferred_skill") and r["match_strength"] == "none"
+        if r["category"] in ("required_skill", "preferred_skill") and r["match_strength"] == "none" or r["match_strength"] == "partial"
     ]
 
     recommendations = recommendation_generator.generate_recommendations(evaluated_requirements)
