@@ -1,21 +1,36 @@
 from sqlalchemy.orm import Session
 
+from app.services.resumes import embeddings
 from app.services.analysis import requirement_extractor, retrieval, match_evaluator, scoring, recommendation_generator
 
 def run_analysis(db: Session, resume_id: str, job_raw_description: str) -> dict:
     requirements = requirement_extractor.extract_requirements(job_raw_description)
 
+    requirement_texts = [req.text for req in requirements]
+    requirement_vectors = embeddings.embed_batch(requirement_texts)
+
+    items_for_evaluation = []
+    for i, (req, vector) in enumerate(zip(requirements, requirement_vectors)):
+        evidence = retrieval.retrieve_evidence_with_vector(db, resume_id, vector, category=req.category)
+        items_for_evaluation.append({"index": i, "requirement": req.text, "evidence": evidence})
+
+    match_results = match_evaluator.evaluate_matches_batch(items_for_evaluation)
+    match_by_index = {m.index: m for m in match_results}
+
     evaluated_requirements = []
-    for req in requirements:
-        evidence = retrieval.retrieve_evidence(db, resume_id, req.text, category=req.category)
-        result = match_evaluator.evaluate_match(req.text, evidence)
+    for i, req in enumerate(requirements):
+        result = match_by_index.get(i)
+        if result is None:
+            match_strength, reasoning = "none", "No evaluation returned for this requirement."
+        else:
+            match_strength, reasoning = result.match_strength, result.reasoning
+
         evaluated_requirements.append(
             {
                 "text": req.text,
                 "category": req.category,
-                "match_strength": result.match_strength,
-                "reasoning": result.reasoning,
-                "evidence": evidence,
+                "match_strength": match_strength,
+                "reasoning": reasoning,
             }
         )
 
